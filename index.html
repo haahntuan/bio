@@ -72,13 +72,18 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(143,1
 
 <div id="edit"><div class="panel">
 <h2>Tạo trang bio</h2><p>Chỉnh tiêu đề, thêm hoặc bớt ô liên kết, rồi bấm Lưu.</p>
+<div id="auth" style="display:none"><label>Email</label><input id="em" type="email" autocomplete="username" placeholder="ban@email.com"><label>Mật khẩu (từ 6 ký tự)</label><input id="pw" type="password" autocomplete="current-password">
+<div class="acts"><button class="btn pri" id="li">Đăng nhập</button><button class="btn" id="su">Tạo tài khoản</button></div><div class="note" id="am"></div></div>
+<div id="me" style="display:none;justify-content:space-between;align-items:center;gap:10px"><span class="note" id="who"></span><button class="btn" id="lo">Đăng xuất</button></div>
+<div id="work">
+<div id="unw" style="display:none"><label>Đường dẫn của bạn (chữ thường, số, - hoặc _)</label><input id="un" maxlength="24" placeholder="ten-cua-ban" autocapitalize="none"></div>
 <label>Tiêu đề</label><input id="t" maxlength="40" placeholder="Tên của bạn">
 <label>Mô tả ngắn</label><input id="s" maxlength="80" placeholder="Một dòng giới thiệu">
 <label>Nhãn nhỏ phía trên tiêu đề</label><input id="e" maxlength="30" placeholder="BIO LINK">
 <div id="rows"></div>
 <div class="acts"><button class="btn" id="add">+ Thêm ô</button><button class="btn pri" id="save">Lưu</button></div>
 <div id="res"><b>Đã lưu.</b> Gửi link này cho mọi người:<input id="lnk" readonly><div class="acts" style="margin-top:0"><button class="btn" id="cp">Sao chép</button><button class="btn" id="op">Mở bio</button></div>
-<div class="note">Dữ liệu nằm ngay trong link nên không cần máy chủ. Để người khác mở được, hãy đưa file này lên một nơi lưu trữ web (GitHub Pages, Netlify, Cloudflare Pages...) rồi tạo và lưu lại tại địa chỉ đó.</div></div>
+<div class="note" id="nt">Dữ liệu nằm ngay trong link nên không cần máy chủ. Để người khác mở được, hãy đưa file này lên một nơi lưu trữ web (GitHub Pages, Netlify, Cloudflare Pages...) rồi tạo và lưu lại tại địa chỉ đó.</div></div></div>
 </div></div>
 
 <div id="view">
@@ -91,6 +96,31 @@ input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(143,1
 
 <script>
 const $=s=>document.querySelector(s);
+/* ===== CẤU HÌNH FIREBASE: dán 2 giá trị của bạn vào đây ===== */
+const CFG={apiKey:'AIzaSyCDlGHOiJnUFrSap-Klclfe-DiMk1Xt2po',dbURL:'https://bioo-d4974-default-rtdb.asia-southeast1.firebasedatabase.app/'};   // vd: dbURL:'https://ten-du-an-default-rtdb.firebaseio.com'
+const CLOUD=!!(CFG.apiKey&&CFG.dbURL);
+let S=null;try{S=JSON.parse(localStorage.getItem('bio-sess'))}catch(e){}
+const keep=()=>{try{localStorage.setItem('bio-sess',JSON.stringify(S))}catch(e){}};
+const ERR={EMAIL_EXISTS:'Email này đã có tài khoản.',INVALID_LOGIN_CREDENTIALS:'Sai email hoặc mật khẩu.',INVALID_PASSWORD:'Sai email hoặc mật khẩu.',EMAIL_NOT_FOUND:'Sai email hoặc mật khẩu.',INVALID_EMAIL:'Email không hợp lệ.',MISSING_PASSWORD:'Hãy nhập mật khẩu.','Permission denied':'Không có quyền ghi. Tên này có thể đã có người dùng.'};
+const errVi=m=>{for(const k in ERR)if(String(m).includes(k))return ERR[k];return/WEAK_PASSWORD/.test(m)?'Mật khẩu cần ít nhất 6 ký tự.':'Có lỗi: '+m};
+const db=async(p,m='GET',b,t)=>{const r=await fetch(CFG.dbURL.replace(/\/$/,'')+'/'+p+'.json'+(t?'?auth='+t:''),{method:m,body:b===undefined?undefined:JSON.stringify(b)});const j=await r.json();if(j&&j.error)throw new Error(j.error);return j};
+async function idt(ep,b){const r=await fetch('https://identitytoolkit.googleapis.com/v1/accounts:'+ep+'?key='+CFG.apiKey,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(b)});const j=await r.json();if(j.error)throw new Error(j.error.message);return j}
+const setS=j=>{S={t:j.idToken,r:j.refreshToken,u:j.localId,e:j.email,x:Date.now()+(+j.expiresIn||3600)*1000-60000};keep()};
+async function tok(){if(S.x<Date.now()){const r=await fetch('https://securetoken.googleapis.com/v1/token?key='+CFG.apiKey,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:'grant_type=refresh_token&refresh_token='+S.r});const j=await r.json();if(j.error)throw new Error(j.error.message);S.t=j.id_token;S.r=j.refresh_token;S.x=Date.now()+(+j.expires_in)*1000-60000;keep()}return S.t}
+async function cloudSave(out){
+ const un=$('#un').value.trim().toLowerCase();
+ if(!/^[a-z0-9_-]{3,24}$/.test(un))throw new Error('Đường dẫn cần 3-24 ký tự: chữ thường, số, - hoặc _.');
+ const t=await tok(),old=await db('users/'+S.u,'GET',undefined,t),ex=await db('pages/'+un);
+ if(ex&&ex.uid!==S.u)throw new Error('Tên này đã có người dùng, hãy chọn tên khác.');
+ await db('pages/'+un,'PUT',{uid:S.u,...out},t);
+ if(old&&old!==un)await db('pages/'+old,'DELETE',undefined,t);
+ await db('users/'+S.u,'PUT',un,t);
+ return location.href.split(/[#?]/)[0]+'?u='+un}
+async function auth(ep){$('#am').textContent='Đang xử lý...';try{setS(await idt(ep,{email:$('#em').value.trim(),password:$('#pw').value,returnSecureToken:true}));$('#am').textContent='';await loaded()}catch(e){$('#am').textContent=errVi(e.message)}}
+async function loaded(){
+ $('#auth').style.display='none';$('#work').style.display='block';$('#me').style.display='flex';$('#who').textContent=S.e;
+ try{const t=await tok(),un=await db('users/'+S.u,'GET',undefined,t);if(un){$('#un').value=un;const p=await db('pages/'+un);
+  if(p&&p.l){D={t:p.t,s:p.s||'',e:p.e||'',l:p.l.map(x=>({p:x.p,n:x.n,u:x.u==='#'?'':x.u}))};fill()}}}catch(e){$('#am').textContent=errVi(e.message)}}
 const P={fb:['Facebook','f'],ig:['Instagram'],th:['Threads','@'],tt:['TikTok','♪'],yt:['YouTube'],x:['X','X'],zl:['Zalo','Z'],tg:['Telegram','➤'],ms:['Messenger','M'],in:['LinkedIn','in'],gh:['GitHub','&lt;/&gt;'],web:['Website','www'],ml:['Email','✉']};
 const B={ig:'instagram.com/',th:'threads.net/@',tt:'tiktok.com/@',x:'x.com/',yt:'youtube.com/@',fb:'facebook.com/'};
 const ico=k=>k=='ig'?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="#fff"/></svg>':k=='yt'?'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4" fill="none" stroke="#fff" stroke-width="2"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>':`<b>${P[k][1]}</b>`;
@@ -120,12 +150,20 @@ $('#rows').addEventListener('click',e=>{if(!e.target.classList.contains('x'))ret
  if(D.l.length<=1)return alert('Cần ít nhất 1 ô.');D.l.splice(e.target.closest('.row').dataset.i,1);drawRows()});
 $('#add').onclick=()=>{if(D.l.length>=12)return alert('Tối đa 12 ô.');D.l.push({p:'web',n:'Website',u:''});drawRows()};
 ['t','s','e'].forEach(k=>$('#'+k).addEventListener('input',e=>D[k]=e.target.value));
-$('#save').onclick=()=>{
+const NOTE0=$('#nt').textContent;
+$('#save').onclick=async()=>{
  const out={t:D.t.trim()||'Bio',s:D.s.trim(),e:D.e.trim(),l:D.l.map(l=>({p:l.p,n:l.n.trim()||P[l.p][0],u:norm(l.p,l.u)}))};
  try{localStorage.setItem('bio-draft',JSON.stringify(D))}catch(e){}
- $('#lnk').value=location.href.split('#')[0]+'#b='+enc(out);$('#res').style.display='block';$('#res').scrollIntoView({behavior:'smooth'})};
+ let link=location.href.split(/[#?]/)[0]+'#b='+enc(out);const b=$('#save');
+ if(CLOUD){b.disabled=true;b.textContent='Đang lưu...';
+  try{link=await cloudSave(out)}catch(e){alert(errVi(e.message));b.disabled=false;b.textContent='Lưu';return}
+  b.disabled=false;b.textContent='Lưu'}
+ $('#nt').textContent=CLOUD?'Đây là link cố định. Bạn có thể sửa bio bất cứ lúc nào, link vẫn giữ nguyên.':NOTE0;
+ $('#lnk').value=link;$('#res').style.display='block';$('#res').scrollIntoView({behavior:'smooth'})};
+$('#li').onclick=()=>auth('signInWithPassword');$('#su').onclick=()=>auth('signUp');
+$('#lo').onclick=()=>{S=null;try{localStorage.removeItem('bio-sess')}catch(e){}location.reload()};
 $('#cp').onclick=()=>{const i=$('#lnk');i.select();try{navigator.clipboard.writeText(i.value)}catch(e){document.execCommand('copy')}$('#cp').textContent='Đã sao chép'};
-$('#op').onclick=()=>{location.href=$('#lnk').value;location.reload()};
+$('#op').onclick=()=>{const l=$('#lnk').value;location.href=l;if(l.includes('#'))location.reload()};
 
 /* ---------- viewer ---------- */
 const PAL=[['#ff5a12','#1b63ff','#ffb02e','#04040c'],['#1b63ff','#ff6a1a','#37d6c9','#04040c'],['#ffa62b','#ff4d12','#1e3cff','#070510'],['#e9edf5','#1b63ff','#ff5a12','#050510']];
@@ -162,11 +200,16 @@ function show(o){
 }
 
 /* ---------- router ---------- */
+const fill=()=>{$('#t').value=D.t;$('#s').value=D.s;$('#e').value=D.e;drawRows()};
 function route(){
+ const q=new URLSearchParams(location.search).get('u');
+ if(q&&CLOUD){$('#edit').style.display='none';
+  const nf={t:'Không tìm thấy',s:'Trang bio này chưa tồn tại',e:'',l:[{p:'web',n:'Tạo bio của bạn',u:location.pathname}]};
+  db('pages/'+encodeURIComponent(q.toLowerCase())).then(p=>show(p&&p.l?p:nf)).catch(()=>show(nf));return}
  const m=location.hash.match(/^#b=(.+)/);
  if(m){try{$('#edit').style.display='none';return show(dec(m[1]))}catch(e){}}
- $('#edit').style.display='block';
- $('#t').value=D.t;$('#s').value=D.s;$('#e').value=D.e;drawRows();
+ $('#edit').style.display='block';fill();
+ if(CLOUD){$('#unw').style.display='block';if(S)loaded();else{$('#auth').style.display='block';$('#work').style.display='none'}}
 }
 $('#mk').onclick=e=>{e.preventDefault();history.replaceState(null,'',location.pathname);location.reload()};
 route();
