@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bio Link</title>
+<link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#e8ecff;--dim:#8a93c9;--acc:#8fb4ff;--w:190px}
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{font-family:'Open Sans',system-ui,sans-serif;color:var(--ink);background:radial-gradient(120% 70% at 50% 0%,#141a6b 0%,#0a0c3d 35%,#04041a 75%,#02020c 100%);overflow:hidden;position:relative}
+body::before{content:"";position:fixed;inset:0;background:
+radial-gradient(1.2px 1.2px at 12% 18%,#fff8,transparent),radial-gradient(1px 1px at 78% 12%,#fff9,transparent),radial-gradient(1.2px 1.2px at 33% 40%,#fff6,transparent),radial-gradient(1px 1px at 90% 44%,#fff7,transparent),radial-gradient(1px 1px at 55% 8%,#fff8,transparent),radial-gradient(1.4px 1.4px at 66% 30%,#fff5,transparent),radial-gradient(1px 1px at 5% 60%,#fff6,transparent);
+background-size:420px 420px;animation:tw 6s ease-in-out infinite alternate;pointer-events:none}
+body::after{content:"";position:fixed;inset:12px;border:1px solid rgba(130,150,255,.14);border-radius:6px;pointer-events:none}
+@keyframes tw{from{opacity:.45;background-position:0 0}to{opacity:1;background-position:30px 12px}}
+.glow{position:fixed;left:50%;top:-10%;width:90vmax;height:50vmax;transform:translateX(-50%);background:radial-gradient(closest-side,rgba(70,90,255,.22),transparent);animation:br 9s ease-in-out infinite alternate;pointer-events:none}
+@keyframes br{to{opacity:.5;transform:translateX(-50%) scale(1.15)}}
+/* ===== viewer ===== */
+#view{position:fixed;inset:0;display:none;flex-direction:column;align-items:center}
+.head{text-align:center;padding:clamp(28px,7vh,64px) 20px 0;z-index:3}
+.eyebrow{font-size:10px;letter-spacing:.28em;color:var(--dim)}
+.eyebrow b{color:var(--acc);font-weight:600}
+h1{font-weight:300;font-size:clamp(34px,7vw,58px);margin:12px 0 8px;letter-spacing:.01em}
+.sub{font-size:12px;color:var(--dim);letter-spacing:.04em}
+.stage{position:relative;flex:1;width:100%;perspective:1100px;perspective-origin:50% 40%;touch-action:pan-y;cursor:grab;max-height:560px;margin-top:2vh}
+.stage:active{cursor:grabbing}
+.card{position:absolute;left:50%;top:38%;width:var(--w);aspect-ratio:3/4.1;border-radius:10px;text-decoration:none;color:var(--ink);will-change:transform,opacity;
+-webkit-box-reflect:below 8px linear-gradient(transparent 50%,rgba(0,0,0,.42));user-select:none;-webkit-user-drag:none}
+.card .in{position:absolute;inset:0;border-radius:10px;overflow:hidden;background:#05050f;box-shadow:0 30px 50px -18px #000,0 0 46px rgba(70,100,255,.22),inset 0 0 0 1px rgba(255,255,255,.08)}
+.liq{position:absolute;inset:-45%;filter:url(#liquid);animation:sw 26s linear infinite}
+.liq.b{animation-duration:38s;animation-direction:reverse;opacity:.7;mix-blend-mode:screen}
+@keyframes sw{to{transform:rotate(360deg) scale(1.1)}}
+.card .name{position:absolute;left:0;right:0;top:-26px;text-align:center;font-size:11px;letter-spacing:.14em;color:#b9c2f5;text-shadow:0 2px 8px #000;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-transform:uppercase}
+.ic{position:absolute;left:50%;top:50%;width:64px;height:64px;margin:-32px;border-radius:50%;display:grid;place-items:center;background:rgba(6,8,30,.45);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.28);box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.ic b{font-size:22px;font-weight:600}.ic svg{width:30px;height:30px}
+.floor{position:absolute;left:0;right:0;bottom:0;height:36%;background:linear-gradient(transparent,rgba(2,2,14,.9));pointer-events:none;z-index:2}
+.foot{position:absolute;bottom:0;left:0;right:0;height:150px;text-align:center;z-index:3;pointer-events:none}
+.cnt{font-size:11px;letter-spacing:.2em;color:var(--dim);margin-top:6px}.cnt b{color:var(--acc)}
+.cur{font-size:18px;font-weight:300;letter-spacing:.16em;margin-top:10px;text-transform:uppercase;min-height:28px}
+.bar{width:16px;height:3px;background:var(--acc);border-radius:2px;margin:8px auto;box-shadow:0 0 10px var(--acc)}
+.dots{display:flex;gap:8px;justify-content:center;margin-top:12px;pointer-events:auto}
+.dots i{width:5px;height:5px;background:#5b649c;border-radius:1px;cursor:pointer;transition:.3s}.dots i.on{background:var(--acc);width:18px}
+.mk{position:fixed;left:24px;bottom:22px;font-size:11px;color:var(--dim);text-decoration:none;z-index:5;letter-spacing:.06em}
+/* ===== editor ===== */
+#edit{position:fixed;inset:0;overflow:auto;display:none;padding:clamp(24px,6vh,60px) 16px 60px}
+.panel{max-width:640px;margin:0 auto;background:rgba(12,16,60,.55);border:1px solid rgba(130,150,255,.2);border-radius:14px;padding:22px;backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 30px 60px -20px #000}
+.panel h2{font-weight:300;font-size:28px;margin-bottom:4px}.panel p{color:var(--dim);font-size:13px;margin-bottom:18px}
+label{display:block;font-size:12px;color:var(--dim);margin:12px 0 5px}
+input,select{width:100%;padding:11px 12px;border-radius:8px;border:1px solid rgba(130,150,255,.25);background:rgba(4,6,30,.7);color:var(--ink);font:inherit;font-size:14px;outline:none}
+input:focus,select:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(143,180,255,.18)}
+.row{display:grid;grid-template-columns:44px 1fr 32px;gap:8px;padding:12px;margin-top:10px;border:1px solid rgba(130,150,255,.16);border-radius:10px;background:rgba(255,255,255,.02)}
+.row .pi{grid-row:span 3;display:grid;place-items:center;border-radius:10px;background:linear-gradient(135deg,#ff6a1a,#1e5bff);height:44px;align-self:start}
+.row .pi svg{width:22px;height:22px}.row .pi b{font-size:15px}
+.row .x{grid-column:3;grid-row:1;background:none;border:0;color:#ff8a8a;font-size:18px;cursor:pointer}
+.row select,.row input{grid-column:2/4}
+.btn{padding:12px 18px;border-radius:9px;border:1px solid rgba(143,180,255,.4);background:rgba(143,180,255,.08);color:var(--ink);font:inherit;font-size:14px;cursor:pointer;transition:.2s}
+.btn:hover{background:rgba(143,180,255,.2)}
+.btn.pri{background:linear-gradient(135deg,#2a5bff,#7a3cff);border-color:transparent;font-weight:600;box-shadow:0 10px 30px -8px #3a55ff}
+.acts{display:flex;gap:10px;margin-top:18px;flex-wrap:wrap}.acts .pri{flex:1}
+#res{display:none;margin-top:18px;padding:14px;border-radius:10px;background:rgba(60,220,160,.08);border:1px solid rgba(60,220,160,.35)}
+#res input{margin:8px 0 10px}
+.note{font-size:12px;color:var(--dim);margin-top:10px;line-height:1.5}
+@media(max-width:640px){:root{--w:150px}.card .name{font-size:10px}.ic{width:52px;height:52px;margin:-26px}}
+@media(prefers-reduced-motion:reduce){.liq,body::before,.glow{animation:none}}
+</style>
+</head>
+<body>
+<div class="glow"></div>
+<svg width="0" height="0" style="position:absolute"><filter id="liquid" x="-10%" y="-10%" width="120%" height="120%"><feTurbulence type="fractalNoise" baseFrequency=".011 .019" numOctaves="2" seed="7"/><feDisplacementMap in="SourceGraphic" scale="110"/></filter></svg>
+
+<div id="edit"><div class="panel">
+<h2>Tạo trang bio</h2><p>Chỉnh tiêu đề, thêm hoặc bớt ô liên kết, rồi bấm Lưu.</p>
+<label>Tiêu đề</label><input id="t" maxlength="40" placeholder="Tên của bạn">
+<label>Mô tả ngắn</label><input id="s" maxlength="80" placeholder="Một dòng giới thiệu">
+<label>Nhãn nhỏ phía trên tiêu đề</label><input id="e" maxlength="30" placeholder="BIO LINK">
+<div id="rows"></div>
+<div class="acts"><button class="btn" id="add">+ Thêm ô</button><button class="btn pri" id="save">Lưu</button></div>
+<div id="res"><b>Đã lưu.</b> Gửi link này cho mọi người:<input id="lnk" readonly><div class="acts" style="margin-top:0"><button class="btn" id="cp">Sao chép</button><button class="btn" id="op">Mở bio</button></div>
+<div class="note">Dữ liệu nằm ngay trong link nên không cần máy chủ. Để người khác mở được, hãy đưa file này lên một nơi lưu trữ web (GitHub Pages, Netlify, Cloudflare Pages...) rồi tạo và lưu lại tại địa chỉ đó.</div></div>
+</div></div>
+
+<div id="view">
+<div class="head"><div class="eyebrow" id="vE"></div><h1 id="vT"></h1><div class="sub" id="vS"></div></div>
+<div class="stage" id="stage"></div>
+<div class="floor"></div>
+<div class="foot"><div class="cnt" id="cnt"></div><div class="cur" id="cur"></div><div class="bar"></div><div class="dots" id="dots"></div></div>
+<a class="mk" id="mk" href="#edit">Tạo bio của bạn</a>
+</div>
+
+<script>
+const $=s=>document.querySelector(s);
+const P={fb:['Facebook','f'],ig:['Instagram'],th:['Threads','@'],tt:['TikTok','♪'],yt:['YouTube'],x:['X','X'],zl:['Zalo','Z'],tg:['Telegram','➤'],ms:['Messenger','M'],in:['LinkedIn','in'],gh:['GitHub','&lt;/&gt;'],web:['Website','www'],ml:['Email','✉']};
+const B={ig:'instagram.com/',th:'threads.net/@',tt:'tiktok.com/@',x:'x.com/',yt:'youtube.com/@',fb:'facebook.com/'};
+const ico=k=>k=='ig'?'<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.3" cy="6.7" r="1" fill="#fff"/></svg>':k=='yt'?'<svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="4" fill="none" stroke="#fff" stroke-width="2"/><path d="M10 9l5 3-5 3z" fill="#fff"/></svg>':`<b>${P[k][1]}</b>`;
+const norm=(p,u)=>{u=(u||'').trim();if(!u)return'#';
+if(p=='zl'&&/^\+?[\d\s]{8,}$/.test(u))return'https://zalo.me/'+u.replace(/\D/g,'');
+if(p=='ml')return/^mailto:/.test(u)?u:'mailto:'+u;
+if(u[0]=='@'&&B[p])u=B[p]+u.slice(1);
+return/^(https?:|mailto:|tel:)/i.test(u)?u:'https://'+u};
+const enc=o=>btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+const dec=s=>JSON.parse(decodeURIComponent(escape(atob(s.replace(/-/g,'+').replace(/_/g,'/')))));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+let D={t:'Tên của bạn',s:'Tất cả liên kết của mình ở đây',e:'BIO LINK',l:[{p:'fb',n:'Facebook',u:''},{p:'ig',n:'Instagram',u:''},{p:'tt',n:'TikTok',u:''}]};
+try{const sv=localStorage.getItem('bio-draft');if(sv)D=JSON.parse(sv)}catch(e){}
+
+/* ---------- editor ---------- */
+function drawRows(){
+ $('#rows').innerHTML=D.l.map((l,i)=>`<div class="row" data-i="${i}"><div class="pi">${ico(l.p)}</div><button class="x" title="Xóa ô">✕</button>
+ <select>${Object.keys(P).map(k=>`<option value="${k}"${k==l.p?' selected':''}>${P[k][0]}</option>`).join('')}</select>
+ <input class="n" placeholder="Tên hiển thị" maxlength="24" value="${esc(l.n)}"><input class="u" placeholder="Link, @tên hoặc số Zalo" value="${esc(l.u)}"></div>`).join('');
+}
+$('#rows').addEventListener('input',e=>{const r=e.target.closest('.row');if(!r)return;const l=D.l[r.dataset.i];
+ if(e.target.classList.contains('n'))l.n=e.target.value;if(e.target.classList.contains('u'))l.u=e.target.value});
+$('#rows').addEventListener('change',e=>{if(e.target.tagName!='SELECT')return;const i=e.target.closest('.row').dataset.i,l=D.l[i];
+ if(!l.n||l.n==P[l.p][0])l.n=P[e.target.value][0];l.p=e.target.value;drawRows()});
+$('#rows').addEventListener('click',e=>{if(!e.target.classList.contains('x'))return;
+ if(D.l.length<=1)return alert('Cần ít nhất 1 ô.');D.l.splice(e.target.closest('.row').dataset.i,1);drawRows()});
+$('#add').onclick=()=>{if(D.l.length>=12)return alert('Tối đa 12 ô.');D.l.push({p:'web',n:'Website',u:''});drawRows()};
+['t','s','e'].forEach(k=>$('#'+k).addEventListener('input',e=>D[k]=e.target.value));
+$('#save').onclick=()=>{
+ const out={t:D.t.trim()||'Bio',s:D.s.trim(),e:D.e.trim(),l:D.l.map(l=>({p:l.p,n:l.n.trim()||P[l.p][0],u:norm(l.p,l.u)}))};
+ try{localStorage.setItem('bio-draft',JSON.stringify(D))}catch(e){}
+ $('#lnk').value=location.href.split('#')[0]+'#b='+enc(out);$('#res').style.display='block';$('#res').scrollIntoView({behavior:'smooth'})};
+$('#cp').onclick=()=>{const i=$('#lnk');i.select();try{navigator.clipboard.writeText(i.value)}catch(e){document.execCommand('copy')}$('#cp').textContent='Đã sao chép'};
+$('#op').onclick=()=>{location.href=$('#lnk').value;location.reload()};
+
+/* ---------- viewer ---------- */
+const PAL=[['#ff5a12','#1b63ff','#ffb02e','#04040c'],['#1b63ff','#ff6a1a','#37d6c9','#04040c'],['#ffa62b','#ff4d12','#1e3cff','#070510'],['#e9edf5','#1b63ff','#ff5a12','#050510']];
+const rnd=(i,k)=>{const x=Math.sin(i*97.13+k*31.7)*10000;return x-Math.floor(x)};
+const liq=(i,s)=>{const c=PAL[i%4];return 'background:'+[0,1,2,3].map(k=>`radial-gradient(ellipse ${25+rnd(i+s,k)*30}% ${20+rnd(i+s,k+9)*35}% at ${rnd(i+s,k+3)*100}% ${rnd(i+s,k+5)*100}%,${c[(k+s)%4]} 0,transparent 70%)`).join(',')+',#05050f'};
+function show(o){
+ $('#view').style.display='flex';document.title=o.t;
+ $('#vE').innerHTML=o.e?esc(o.e).replace(/(.*)/,'$1'):'';$('#vT').textContent=o.t;$('#vS').textContent=o.s||'';
+ const L=o.l,n=L.length,st=$('#stage');
+ st.innerHTML=L.map((l,i)=>`<a class="card" href="${esc(l.u)}" target="_blank" rel="noopener"><div class="name">${esc(l.n)}</div><div class="in"><div class="liq" style="${liq(i,0)}"></div><div class="liq b" style="${liq(i+5,1)}"></div><div class="ic">${ico(l.p)}</div></div></a>`).join('');
+ $('#dots').innerHTML=L.map((_,i)=>`<i data-i="${i}"></i>`).join('');
+ const cards=[...st.children],dots=[...$('#dots').children];
+ let pos=0,tgt=0,drag=null,moved=0,idle=0,last=-1;
+ const pad=v=>String(v).padStart(2,'0');
+ function draw(){
+  const W=cards[0].offsetWidth;
+  cards.forEach((c,i)=>{let d=((i-pos)%n+n)%n;if(d>n/2)d-=n;const a=Math.abs(d),s=Math.sign(d);
+   const x=s*(Math.min(a,1)*W*1.02+Math.max(a-1,0)*W*.72);
+   c.style.transform=`translate(-50%,-50%) translateX(${x}px) translateZ(${-Math.min(a,4)*70}px) rotateY(${-s*Math.min(a,1.6)*34}deg) scale(${1-Math.min(a,4)*.03})`;
+   c.style.opacity=a>3.6?0:1-Math.max(a-2.4,0)*.8;c.style.zIndex=100-Math.round(a*10);c.style.pointerEvents=a>3.2?'none':'auto'});
+  const cur=((Math.round(pos)%n)+n)%n;
+  if(cur!==last){last=cur;$('#cnt').innerHTML=`<b>${pad(cur+1)}</b> / ${pad(n)}`;$('#cur').textContent=L[cur].n;dots.forEach((d,i)=>d.classList.toggle('on',i==cur))}}
+ function loop(t){
+  if(!drag){if(t-idle>4200){tgt+=1;idle=t}pos+=(tgt-pos)*.07}
+  draw();requestAnimationFrame(loop)}
+ st.addEventListener('pointerdown',e=>{drag={x:e.clientX,p:pos};moved=0;idle=performance.now()+6000});
+ addEventListener('pointermove',e=>{if(!drag)return;const dx=e.clientX-drag.x;moved=Math.max(moved,Math.abs(dx));pos=drag.p-dx/(cards[0].offsetWidth*.9);tgt=pos});
+ addEventListener('pointerup',()=>{if(!drag)return;drag=null;tgt=Math.round(pos);idle=performance.now()+3000});
+ st.addEventListener('click',e=>{if(moved>6){e.preventDefault()}},true);
+ st.addEventListener('dragstart',e=>e.preventDefault());
+ $('#dots').onclick=e=>{const i=e.target.dataset.i;if(i==null)return;const c=((Math.round(tgt)%n)+n)%n;let d=i-c;if(d>n/2)d-=n;if(d<-n/2)d+=n;tgt=Math.round(tgt)+d;idle=performance.now()+6000};
+ addEventListener('keydown',e=>{if(e.key=='ArrowRight')tgt=Math.round(tgt)+1;if(e.key=='ArrowLeft')tgt=Math.round(tgt)-1;idle=performance.now()+6000});
+ requestAnimationFrame(loop);
+}
+
+/* ---------- router ---------- */
+function route(){
+ const m=location.hash.match(/^#b=(.+)/);
+ if(m){try{$('#edit').style.display='none';return show(dec(m[1]))}catch(e){}}
+ $('#edit').style.display='block';
+ $('#t').value=D.t;$('#s').value=D.s;$('#e').value=D.e;drawRows();
+}
+$('#mk').onclick=e=>{e.preventDefault();history.replaceState(null,'',location.pathname);location.reload()};
+route();
+</script>
+</body>
+</html>
